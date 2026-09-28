@@ -1,0 +1,400 @@
+{
+  "version": "1.0",
+  "description": "Base de connaissances de RecallAI. Chaque notion est découpée en sous-notions ordonnées de la plus fondamentale à la plus avancée. Les 'faits' servent de référence au modèle pour corriger l'étudiant ; les 'erreurs_frequentes' servent à générer des réponses fausses réalistes pour le dataset et à guider la correction.",
+  "niveaux": {
+    "1": "définition",
+    "2": "compréhension",
+    "3": "application",
+    "4": "piège / mise en situation"
+  },
+  "domaines": {
+    "SQL": {
+      "notions": {
+        "Jointures SQL": {
+          "alias": ["jointure", "jointures", "join", "joins", "inner join", "left join", "right join", "outer join"],
+          "sous_notions": {
+            "INNER JOIN": {
+              "faits": [
+                "INNER JOIN ne renvoie que les lignes qui ont une correspondance dans les deux tables selon la condition ON.",
+                "Un client qui n'a passé aucune commande n'apparaît pas dans le résultat de clients INNER JOIN commandes.",
+                "JOIN écrit seul est équivalent à INNER JOIN."
+              ],
+              "erreurs_frequentes": [
+                "Croire que INNER JOIN renvoie toutes les lignes des deux tables.",
+                "Oublier la condition ON, ce qui produit un produit cartésien ou une erreur selon le SGBD."
+              ]
+            },
+            "LEFT JOIN": {
+              "faits": [
+                "LEFT JOIN renvoie toutes les lignes de la table de gauche et les lignes correspondantes de la table de droite.",
+                "Quand une ligne de gauche n'a pas de correspondance, les colonnes de la table de droite valent NULL.",
+                "Pour trouver les lignes sans correspondance : LEFT JOIN puis WHERE droite.cle IS NULL."
+              ],
+              "erreurs_frequentes": [
+                "Croire que LEFT JOIN garde toutes les lignes des deux tables.",
+                "Filtrer la table de droite dans le WHERE (ex. WHERE commandes.montant > 100), ce qui élimine les lignes NULL et transforme en pratique le LEFT JOIN en INNER JOIN."
+              ]
+            },
+            "RIGHT JOIN": {
+              "faits": [
+                "RIGHT JOIN est le symétrique de LEFT JOIN : il garde toutes les lignes de la table de droite.",
+                "A RIGHT JOIN B donne les mêmes lignes que B LEFT JOIN A.",
+                "La table de gauche est celle écrite avant le mot-clé JOIN, la table de droite celle écrite après."
+              ],
+              "erreurs_frequentes": [
+                "Inverser la table de gauche et la table de droite.",
+                "Croire que RIGHT JOIN permet d'obtenir un résultat impossible à obtenir avec LEFT JOIN."
+              ]
+            },
+            "FULL OUTER JOIN": {
+              "faits": [
+                "FULL OUTER JOIN garde toutes les lignes des deux tables, avec NULL du côté où il n'y a pas de correspondance.",
+                "MySQL ne supporte pas directement FULL OUTER JOIN : on l'émule avec un LEFT JOIN, puis UNION ALL avec les lignes du RIGHT JOIN qui n'ont pas de correspondance à gauche."
+              ],
+              "erreurs_frequentes": [
+                "Confondre FULL OUTER JOIN avec CROSS JOIN, qui produit toutes les combinaisons de lignes (produit cartésien).",
+                "Croire que FULL OUTER JOIN ne garde que les lignes sans correspondance."
+              ]
+            }
+          }
+        },
+        "GROUP BY et agrégats": {
+          "alias": ["group by", "agrégat", "agrégats", "agregat", "agregation", "agrégation", "having", "count", "sum", "avg"],
+          "sous_notions": {
+            "Fonctions d'agrégat": {
+              "faits": [
+                "COUNT, SUM, AVG, MIN et MAX calculent une seule valeur à partir d'un ensemble de lignes.",
+                "Sans GROUP BY, une fonction d'agrégat résume toute la table en une seule ligne.",
+                "Les fonctions d'agrégat ignorent les valeurs NULL, sauf COUNT(*)."
+              ],
+              "erreurs_frequentes": [
+                "Croire que AVG compte les NULL comme des zéros.",
+                "Croire qu'une fonction d'agrégat renvoie une valeur par ligne de la table."
+              ]
+            },
+            "GROUP BY": {
+              "faits": [
+                "GROUP BY regroupe les lignes qui ont la même valeur dans les colonnes indiquées ; l'agrégat est calculé pour chaque groupe.",
+                "Selon la norme SQL, toute colonne du SELECT qui n'est pas agrégée doit apparaître dans le GROUP BY."
+              ],
+              "erreurs_frequentes": [
+                "Sélectionner une colonne non agrégée qui n'est pas dans le GROUP BY.",
+                "Croire que GROUP BY trie les résultats (c'est le rôle de ORDER BY)."
+              ]
+            },
+            "WHERE vs HAVING": {
+              "faits": [
+                "WHERE filtre les lignes avant le regroupement ; HAVING filtre les groupes après le regroupement.",
+                "Une condition portant sur un agrégat, comme COUNT(*) > 5, doit être écrite dans HAVING.",
+                "Ordre logique d'exécution : FROM, WHERE, GROUP BY, HAVING, SELECT, ORDER BY."
+              ],
+              "erreurs_frequentes": [
+                "Écrire WHERE COUNT(*) > 5 au lieu de HAVING COUNT(*) > 5.",
+                "Croire que WHERE et HAVING sont interchangeables."
+              ]
+            },
+            "COUNT(*) vs COUNT(colonne)": {
+              "faits": [
+                "COUNT(*) compte toutes les lignes ; COUNT(colonne) ne compte que les lignes où la colonne n'est pas NULL.",
+                "COUNT(DISTINCT colonne) compte les valeurs distinctes non NULL.",
+                "Après un LEFT JOIN, COUNT(commandes.id) vaut 0 pour un client sans commande, alors que COUNT(*) vaut 1."
+              ],
+              "erreurs_frequentes": [
+                "Utiliser COUNT(*) après un LEFT JOIN pour compter les commandes par client, ce qui compte 1 au lieu de 0 pour les clients sans commande.",
+                "Croire que COUNT(colonne) compte les valeurs distinctes."
+              ]
+            }
+          }
+        },
+        "Clés et contraintes": {
+          "alias": ["clé", "clés", "cle", "cles", "clé primaire", "clé étrangère", "primary key", "foreign key", "contrainte", "contraintes", "intégrité"],
+          "sous_notions": {
+            "Clé primaire": {
+              "faits": [
+                "La clé primaire identifie de façon unique chaque ligne d'une table ; elle implique UNIQUE et NOT NULL.",
+                "Une table a au plus une clé primaire, mais celle-ci peut être composée de plusieurs colonnes (clé composite)."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'une table peut avoir plusieurs clés primaires (confusion avec une clé composite).",
+                "Croire qu'une clé primaire peut contenir NULL."
+              ]
+            },
+            "Clé étrangère": {
+              "faits": [
+                "Une clé étrangère est une colonne qui référence la clé primaire (ou une clé unique) d'une autre table.",
+                "Elle garantit l'intégrité référentielle : on ne peut pas insérer une commande pour un client qui n'existe pas.",
+                "Plusieurs lignes peuvent avoir la même valeur de clé étrangère (plusieurs commandes pour un même client)."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'une clé étrangère doit être unique.",
+                "Croire qu'une clé étrangère ne peut jamais être NULL (elle le peut, sauf si on ajoute NOT NULL)."
+              ]
+            },
+            "UNIQUE, NOT NULL et CHECK": {
+              "faits": [
+                "UNIQUE interdit les doublons dans une colonne ; la plupart des SGBD autorisent tout de même plusieurs NULL.",
+                "NOT NULL oblige à renseigner une valeur.",
+                "CHECK impose une condition sur les valeurs, par exemple CHECK (prix >= 0)."
+              ],
+              "erreurs_frequentes": [
+                "Croire que UNIQUE équivaut à une clé primaire.",
+                "Croire que UNIQUE interdit aussi les valeurs NULL."
+              ]
+            },
+            "ON DELETE": {
+              "faits": [
+                "ON DELETE CASCADE supprime automatiquement les lignes filles quand la ligne référencée est supprimée.",
+                "ON DELETE SET NULL met la clé étrangère des lignes filles à NULL.",
+                "Par défaut (NO ACTION ou RESTRICT), la suppression d'une ligne encore référencée est refusée."
+              ],
+              "erreurs_frequentes": [
+                "Croire que supprimer un client supprime toujours ses commandes, même sans CASCADE.",
+                "Croire que CASCADE supprime la table entière."
+              ]
+            }
+          }
+        },
+        "Sous-requêtes": {
+          "alias": ["sous-requête", "sous-requêtes", "sous requete", "sous requetes", "subquery", "exists", "not in", "requête imbriquée"],
+          "sous_notions": {
+            "Sous-requête scalaire": {
+              "faits": [
+                "Une sous-requête scalaire renvoie une seule colonne et au plus une ligne ; on peut l'utiliser dans SELECT ou dans WHERE.",
+                "Si une sous-requête scalaire ne renvoie aucune ligne, sa valeur est NULL ; si elle renvoie plusieurs lignes, une erreur se produit.",
+                "Exemple : SELECT nom FROM produits WHERE prix > (SELECT AVG(prix) FROM produits)."
+              ],
+              "erreurs_frequentes": [
+                "Comparer avec = une sous-requête qui renvoie plusieurs lignes, ce qui provoque une erreur.",
+                "Croire qu'on peut écrire WHERE prix > AVG(prix) sans sous-requête."
+              ]
+            },
+            "IN et EXISTS": {
+              "faits": [
+                "IN teste si une valeur appartient à la liste renvoyée par la sous-requête.",
+                "EXISTS est vrai dès que la sous-requête renvoie au moins une ligne ; le contenu des colonnes renvoyées n'a pas d'importance."
+              ],
+              "erreurs_frequentes": [
+                "Croire que EXISTS compare des valeurs comme IN.",
+                "Croire que EXISTS renvoie le nombre de lignes trouvées."
+              ]
+            },
+            "Sous-requête corrélée": {
+              "faits": [
+                "Une sous-requête corrélée fait référence à une colonne de la requête externe ; elle est évaluée logiquement pour chaque ligne externe.",
+                "Exemple : clients ayant au moins une commande de plus de 100 € : SELECT * FROM clients c WHERE EXISTS (SELECT 1 FROM commandes co WHERE co.client_id = c.id AND co.montant > 100)."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'une sous-requête corrélée n'est exécutée qu'une seule fois pour toute la requête.",
+                "Oublier la condition de corrélation, ce qui rend EXISTS vrai pour toutes les lignes dès qu'une seule commande correspond."
+              ]
+            },
+            "NOT IN et NULL": {
+              "faits": [
+                "Si la sous-requête d'un NOT IN renvoie au moins une valeur NULL, la condition n'est jamais vraie et la requête ne renvoie aucune ligne.",
+                "NOT EXISTS n'a pas ce problème : c'est la forme recommandée pour exprimer « qui n'a aucun ... »."
+              ],
+              "erreurs_frequentes": [
+                "Croire que NOT IN et NOT EXISTS sont toujours équivalents.",
+                "Croire que les NULL sont simplement ignorés par NOT IN."
+              ]
+            }
+          }
+        }
+      }
+    },
+    "Python": {
+      "notions": {
+        "Listes Python": {
+          "alias": ["liste", "listes", "list", "lists", "append", "slicing", "tableau"],
+          "sous_notions": {
+            "Indexation et slicing": {
+              "faits": [
+                "Une liste est une séquence ordonnée notée [ ], qui peut contenir des éléments de types différents.",
+                "Les indices commencent à 0 ; l[-1] est le dernier élément ; un indice hors limites lève IndexError.",
+                "l[a:b] va de l'indice a inclus à b exclu ; l[::-1] renvoie la liste inversée ; un slice crée une nouvelle liste."
+              ],
+              "erreurs_frequentes": [
+                "Croire que le premier élément est à l'indice 1.",
+                "Croire que l[a:b] inclut l'élément d'indice b."
+              ]
+            },
+            "Mutabilité": {
+              "faits": [
+                "Une liste est mutable : on peut modifier, ajouter ou supprimer des éléments sans créer une nouvelle liste.",
+                "Le tuple est l'équivalent immuable de la liste ; les chaînes de caractères sont aussi immuables."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'une liste est immuable.",
+                "Croire qu'on peut modifier un caractère d'une chaîne avec s[0] = 'x'."
+              ]
+            },
+            "Méthodes de modification": {
+              "faits": [
+                "append(x) ajoute x à la fin comme un seul élément ; extend(iterable) ajoute chaque élément de l'itérable.",
+                "insert(i, x) insère à l'indice i ; pop() retire et renvoie le dernier élément ; remove(x) retire la première occurrence de x.",
+                "Ces méthodes modifient la liste en place et renvoient None, sauf pop qui renvoie l'élément retiré."
+              ],
+              "erreurs_frequentes": [
+                "Écrire l = l.append(3), ce qui met None dans l.",
+                "Confondre append et extend : [1, 2].append([3, 4]) donne [1, 2, [3, 4]] et non [1, 2, 3, 4]."
+              ]
+            },
+            "Copie et références": {
+              "faits": [
+                "b = a ne copie pas la liste : a et b désignent le même objet, modifier l'un modifie l'autre.",
+                "a.copy(), list(a) et a[:] font une copie superficielle ; copy.deepcopy(a) copie aussi les listes imbriquées.",
+                "[[0] * 3] * 3 crée trois références vers la même sous-liste ; on écrit plutôt [[0] * 3 for _ in range(3)]."
+              ],
+              "erreurs_frequentes": [
+                "Croire que b = a crée une copie indépendante.",
+                "Croire qu'une copie superficielle copie aussi les sous-listes."
+              ]
+            }
+          }
+        },
+        "Boucles Python": {
+          "alias": ["boucle", "boucles", "for", "while", "range", "itération", "iteration", "break", "enumerate"],
+          "sous_notions": {
+            "Boucle for et range": {
+              "faits": [
+                "for parcourt directement les éléments d'un itérable : liste, chaîne, dictionnaire, range, etc.",
+                "range(a, b, pas) produit les entiers de a inclus à b exclu ; range(5) donne 0, 1, 2, 3, 4.",
+                "Modifier une liste (ajout ou suppression) pendant qu'on la parcourt avec for peut faire sauter des éléments."
+              ],
+              "erreurs_frequentes": [
+                "Croire que range(5) va de 1 à 5.",
+                "Supprimer des éléments d'une liste pendant qu'on la parcourt."
+              ]
+            },
+            "Boucle while": {
+              "faits": [
+                "while répète son bloc tant que la condition est vraie ; elle convient quand le nombre d'itérations n'est pas connu à l'avance.",
+                "La boucle devient infinie si sa condition reste toujours vraie et qu'aucune instruction comme break ne permet d'en sortir."
+              ],
+              "erreurs_frequentes": [
+                "Oublier de mettre à jour la variable testée dans la condition, ce qui crée une boucle infinie.",
+                "Croire que while s'exécute toujours au moins une fois (Python n'a pas de do-while)."
+              ]
+            },
+            "break, continue et else": {
+              "faits": [
+                "break sort immédiatement de la boucle la plus interne ; continue passe directement à l'itération suivante.",
+                "Le bloc else d'une boucle s'exécute uniquement si la boucle se termine sans break."
+              ],
+              "erreurs_frequentes": [
+                "Croire que break sort de toutes les boucles imbriquées.",
+                "Confondre le else d'une boucle avec celui d'un if : il ne dépend pas d'une condition mais de l'absence de break."
+              ]
+            },
+            "enumerate et zip": {
+              "faits": [
+                "enumerate(l) produit des paires (indice, élément), ce qui évite d'écrire range(len(l)).",
+                "zip(a, b) parcourt plusieurs itérables en parallèle et s'arrête au plus court."
+              ],
+              "erreurs_frequentes": [
+                "Croire que zip complète le plus court avec None (c'est itertools.zip_longest).",
+                "Inverser l'ordre des valeurs de enumerate : c'est (indice, élément), pas (élément, indice)."
+              ]
+            }
+          }
+        },
+        "Fonctions Python": {
+          "alias": ["fonction", "fonctions", "def", "return", "paramètre", "paramètres", "argument", "arguments", "portée", "scope"],
+          "sous_notions": {
+            "def et return": {
+              "faits": [
+                "def définit une fonction ; return renvoie une valeur à l'appelant et termine immédiatement la fonction.",
+                "Une fonction sans return (ou avec return seul) renvoie None."
+              ],
+              "erreurs_frequentes": [
+                "Confondre print et return : print affiche, mais la fonction renvoie quand même None.",
+                "Croire que le code écrit après un return est exécuté."
+              ]
+            },
+            "Paramètres et arguments": {
+              "faits": [
+                "On peut passer les arguments par position ou par nom, par exemple f(1, y=2) ; un paramètre peut avoir une valeur par défaut : def f(x, y=0).",
+                "Les paramètres avec valeur par défaut doivent être placés après ceux qui n'en ont pas.",
+                "*args regroupe les arguments positionnels supplémentaires dans un tuple, **kwargs regroupe les arguments nommés dans un dictionnaire."
+              ],
+              "erreurs_frequentes": [
+                "Écrire def f(x=0, y), qui provoque une SyntaxError.",
+                "Croire que *args est une liste (c'est un tuple)."
+              ]
+            },
+            "Portée des variables": {
+              "faits": [
+                "Une variable affectée dans une fonction est locale à cette fonction par défaut.",
+                "Une fonction peut lire une variable globale ; pour la réaffecter, il faut la déclarer avec global.",
+                "Écrire x += 1 dans une fonction alors que x n'existe qu'en global lève UnboundLocalError."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'affecter une variable dans une fonction modifie la variable globale du même nom.",
+                "Croire qu'une variable locale reste accessible après la fin de la fonction."
+              ]
+            },
+            "Argument par défaut mutable": {
+              "faits": [
+                "La valeur par défaut d'un paramètre est évaluée une seule fois, au moment de la définition de la fonction.",
+                "Avec def f(l=[]), la même liste est partagée entre tous les appels et s'accumule.",
+                "Solution : def f(l=None) puis if l is None: l = []."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'une nouvelle liste vide est créée à chaque appel de def f(l=[]).",
+                "Croire que le problème concerne aussi les valeurs par défaut immuables comme 0 ou None."
+              ]
+            }
+          }
+        },
+        "Dictionnaires Python": {
+          "alias": ["dictionnaire", "dictionnaires", "dict", "dico", "clé-valeur", "cle-valeur", "hashable"],
+          "sous_notions": {
+            "Clés et valeurs": {
+              "faits": [
+                "Un dictionnaire associe des clés uniques à des valeurs : d = {'a': 1, 'b': 2}.",
+                "d['a'] lève KeyError si la clé n'existe pas ; d.get('z', 0) renvoie une valeur par défaut à la place.",
+                "Depuis Python 3.7, un dictionnaire conserve l'ordre d'insertion des clés."
+              ],
+              "erreurs_frequentes": [
+                "Croire qu'un dictionnaire peut contenir deux fois la même clé.",
+                "Croire que d['z'] renvoie None quand la clé est absente."
+              ]
+            },
+            "Clés hashables": {
+              "faits": [
+                "Les clés doivent être hashables : par exemple int, float, str, ou un tuple dont tous les éléments sont eux-mêmes hashables.",
+                "Une liste ne peut pas être une clé : cela lève TypeError: unhashable type: 'list'. Les valeurs, elles, peuvent être de n'importe quel type."
+              ],
+              "erreurs_frequentes": [
+                "Utiliser une liste comme clé de dictionnaire.",
+                "Croire que les valeurs doivent elles aussi être immuables."
+              ]
+            },
+            "Ajout, modification et suppression": {
+              "faits": [
+                "d[k] = v ajoute la clé k ou remplace sa valeur si elle existe déjà.",
+                "del d[k] ou d.pop(k) suppriment une clé ; pop renvoie la valeur supprimée.",
+                "k in d teste la présence d'une clé, pas d'une valeur."
+              ],
+              "erreurs_frequentes": [
+                "Croire que 1 in {'a': 1} vaut True.",
+                "Croire que d[k] = v lève une erreur si k existe déjà."
+              ]
+            },
+            "Parcours de dictionnaire": {
+              "faits": [
+                "for k in d parcourt les clés ; d.values() donne les valeurs et d.items() les paires (clé, valeur).",
+                "Ajouter ou supprimer des clés pendant le parcours d'un dictionnaire lève RuntimeError.",
+                "Compréhension de dictionnaire : {k: v * 2 for k, v in d.items()}."
+              ],
+              "erreurs_frequentes": [
+                "Croire que for x in d parcourt les valeurs.",
+                "Supprimer des clés pendant qu'on parcourt le dictionnaire."
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
