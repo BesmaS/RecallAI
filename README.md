@@ -12,12 +12,12 @@ RecallAI est un coach de révision par **rappel actif** pour les étudiants en i
 
 | Fichier / dossier | Description |
 |---|---|
-| `agent (1).ipynb` | **Version exécutée du notebook .** Toutes les sorties sont visibles : tokenisation, figures, courbes de perte, évaluation et interface. Exécuté sur Google Colab, GPU T4. |
+| `agent (1).ipynb` | **Version exécutée du notebook (à lire en priorité).** Toutes les sorties sont visibles : tokenisation, figures, courbes de perte, évaluation et interface. Exécuté sur Google Colab, GPU T4. |
 | `agent.ipynb` | Même notebook, sans les sorties (version source). |
 | `data/connaissances.json` | Base de connaissances : 2 domaines, 8 notions, 32 sous-notions (faits de référence, erreurs fréquentes, alias). |
 | `data/banque_questions.json` | Banque de 128 questions (4 niveaux par sous-notion) servant à générer le dataset. |
 | `data/recallai_{train,val,test}.jsonl` | Dataset généré par la section 5. Le test ne contient que deux notions exclues de l'entraînement (Sous-requêtes, Dictionnaires). |
-| `recallai-lora/` | Adaptateur LoRA (meilleur point de contrôle selon la validation) et `entrainement.json` (hyperparamètres et pertes). |
+| `recallai-lora.zip` | Adaptateur LoRA (meilleur point de contrôle selon la validation) et `entrainement.json` (hyperparamètres et pertes). **Publié dans la [Release v1.0](https://github.com/BesmaS/RecallAI/releases)**, car il est trop volumineux pour le dépôt  |
 | `resultats/` | Sorties de l'exécution : réponses de référence de la baseline, courbes de perte, grille d'évaluation. |
 | `rapport.pdf` | Rapport du projet (4 pages hors annexes). |
 | `README.txt` | Instructions d'exécution, en texte brut. |
@@ -68,13 +68,18 @@ RecallAI est un coach de révision par **rappel actif** pour les étudiants en i
    - section 7 (évaluation, 48 générations) : quelques minutes.
 6. Section 8 : la dernière cellule lance l'interface Gradio. Un lien public temporaire (`*.gradio.live`) s'affiche, et l'interface apparaît aussi dans le notebook.
 
-> **Réexécuter sans réentraîner :** placer le dossier `recallai-lora/` à la racine (le téléverser dans Colab), puis mettre `ENTRAINER = False` au début de la section 6.
+> **Réexécuter sans réentraîner :** télécharger l'adaptateur depuis la [Release v1.0](https://github.com/BesmaS/RecallAI/releases), le dézipper à la racine du projet, puis mettre `ENTRAINER = False` au début de la section 6. Sur Colab, une cellule suffit :
+>
+> ```python
+> !wget https://github.com/BesmaS/RecallAI/releases/download/v1.0/recallai-lora.zip
+> !unzip -q recallai-lora.zip
+> ```
 
 > **Sauvegarder l'adaptateur :** dans Colab, les fichiers sont effacés à la fin de la session. Décommenter les deux lignes de la dernière cellule de la section 6 pour télécharger `recallai-lora.zip`.
 
 ---
 
-##  Exécution en local
+## Exécution en local
 
 Il faut Python 3.10 ou plus récent. Un GPU NVIDIA est conseillé : le notebook fonctionne sur CPU, mais l'entraînement y est très lent.
 
@@ -95,10 +100,10 @@ from peft import PeftModel
 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
 base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct", dtype="auto")
-model = PeftModel.from_pretrained(base, "recallai-lora")
+model = PeftModel.from_pretrained(base, "recallai-lora")  # dossier obtenu en dézippant le zip de la Release
 ```
 
-L'adaptateur a été entraîné avec le prompt construit par le moteur de la section 3 (message système, fiche et consigne du tour). Il donne de bons résultats dans ce cadre, pas avec un prompt quelconque.
+⚠️ L'adaptateur a été entraîné avec le prompt construit par le moteur de la section 3 (message système, fiche et consigne du tour). Il donne de bons résultats dans ce cadre, pas avec un prompt quelconque.
 
 ---
 
@@ -108,6 +113,6 @@ L'adaptateur a été entraîné avec le prompt construit par le moteur de la sec
 - Le dataset est entièrement régénéré par la section 5 à partir des deux fichiers JSON de `data/`.
 - L'évaluation utilise le décodage glouton, qui est déterministe.
 
-##  Données
+## Données
 
 Aucune donnée personnelle : les réponses d'étudiants sont fictives, générées à partir de la banque de questions. La banque de questions et la base de connaissances ont été rédigées pour le projet avec l'aide d'une IA générative, puis relues manuellement.
